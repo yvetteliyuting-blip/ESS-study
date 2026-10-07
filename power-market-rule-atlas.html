@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全国电力市场规则架构台 · v2.0（多界面版）</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --ink:#1e293b; --ink-soft:#5b6573; --ink-faint:#94a3b8;
+    --line:#e4e9f0; --brand:#1d4ed8; --brand-soft:#eef3fe; --brand-ink:#1e3a8a;
+    --green:#15803d; --green-bg:#e8f6ec; --green-line:#b9e3c6;
+    --amber:#b45309; --amber-bg:#fdf4e3; --amber-line:#f0d9a8;
+    --red:#b91c1c; --red-bg:#fdecec; --red-line:#f2c4c4;
+    --blue:#1d4ed8; --blue-bg:#e8effd; --blue-line:#c3d5f8;
+    --sky:#0369a1; --sky-bg:#e6f4fb;
+    --indigo:#4338ca; --indigo-bg:#eceafe;
+    --slate:#475569; --slate-bg:#eef1f5;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 10px 28px rgba(16,24,40,.07);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{margin:0;font-weight:800;letter-spacing:.2px}
+  a{color:inherit;text-decoration:none}
+  table{border-collapse:collapse;width:100%}
+
+  /* ===== App shell ===== */
+  .app{display:flex;min-height:100vh}
+  .side{width:252px;flex:0 0 252px;background:var(--panel);border-right:1px solid var(--line);
+    position:sticky;top:0;height:100vh;overflow-y:auto;padding:18px 12px}
+  .side::-webkit-scrollbar{width:6px}.side::-webkit-scrollbar-thumb{background:#d5dbe4;border-radius:9px}
+  .brand{padding:6px 12px 16px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .brand .t{font-size:16px;font-weight:800;line-height:1.35}
+  .brand .v{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;color:#fff;
+    background:var(--brand);padding:2px 9px;border-radius:99px}
+  .grp{margin-bottom:6px}
+  .grp-label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;color:var(--ink-faint);
+    letter-spacing:.6px;padding:10px 12px 6px;text-transform:uppercase}
+  .grp-label .dot{width:8px;height:8px;border-radius:50%}
+  .side a.item{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-soft);
+    padding:8px 12px;border-radius:9px;margin:1px 0;transition:.13s;border:1px solid transparent}
+  .side a.item:hover{background:var(--brand-soft);color:var(--brand-ink)}
+  .side a.item.active{background:var(--brand);color:#fff;font-weight:700;border-color:var(--brand)}
+  .side a.item .ix{font-size:11px;font-weight:800;opacity:.75;min-width:16px}
+
+  .main{flex:1;min-width:0;padding:26px 34px 90px;max-width:1220px}
+
+  /* ===== View ===== */
+  .view{display:none}
+  .view.on{display:block;animation:fade .22s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .vhead{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .vhead .crumb{font-size:12px;color:var(--ink-faint);font-weight:700;letter-spacing:.4px;margin-bottom:6px}
+  .vhead h1{font-size:26px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .vhead h1 .chip{font-size:12px;font-weight:800;color:#fff;padding:3px 11px;border-radius:7px}
+  .vhead .lede{margin-top:8px;color:var(--ink-soft);font-size:14px;max-width:80ch}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:20px 22px}
+  .card+.card{margin-top:16px}
+  .card>h3{font-size:17px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .card>h3 .tagx{font-size:11px;font-weight:700;color:var(--ink-soft);background:var(--slate-bg);
+    padding:2px 8px;border-radius:6px}
+
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g5{grid-template-columns:repeat(5,1fr)}
+  @media(max-width:1080px){.g4,.g5{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}}
+  @media(max-width:760px){.g2,.g3,.g4,.g5{grid-template-columns:1fr}.main{padding:20px 16px 70px}.side{width:200px;flex-basis:200px}}
+
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px 17px;box-shadow:var(--shadow)}
+  .stat .n{font-size:27px;font-weight:800;line-height:1.05;color:var(--brand)}
+  .stat .n small{font-size:14px;font-weight:700}
+  .stat .l{font-size:12.5px;color:var(--ink-soft);margin-top:5px}
+  .stat .s{font-size:11px;color:var(--ink-faint);margin-top:3px}
+  .stat.g .n{color:var(--green)}.stat.a .n{color:var(--amber)}.stat.b .n{color:var(--blue)}
+  .stat.sk .n{color:var(--slate);font-size:22px}
+
+  table.t{font-size:13.5px}
+  table.t th,table.t td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  table.t th{background:#fafbfd;font-weight:800;color:var(--ink-soft);font-size:12.5px;letter-spacing:.3px;white-space:nowrap}
+  table.t tbody tr:hover td{background:#fafcff}
+  table.t td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tw{overflow-x:auto}
+
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap}
+  .p-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-line)}
+  .p-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-line)}
+  .p-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-line)}
+  .p-gray{background:var(--slate-bg);color:var(--slate);border:1px solid var(--line)}
+  .p-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-line)}
+
+  .note{border:1px dashed var(--brand);background:var(--brand-soft);border-radius:11px;
+    padding:12px 15px;font-size:13.5px;color:var(--brand-ink);margin:14px 0}
+  .warn{border:1px dashed var(--amber);background:var(--amber-bg);border-radius:11px;
+    padding:12px 15px;font-size:13.5px;color:#7c4a09;margin:14px 0}
+  .formula{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:16px 18px;
+    font-family:"SFMono-Regular",Consolas,"Courier New",monospace;font-size:13.5px;line-height:1.85;overflow-x:auto;white-space:pre}
+  .formula .hl{color:#7dd3fc;font-weight:700}
+  .formula .cm{color:#64748b}
+
+  .src{font-size:11.5px;color:var(--ink-faint);margin-top:8px;line-height:1.55}
+  .mt{margin-top:18px}
+  .tip{border-bottom:1px dotted var(--ink-faint);cursor:help}
+
+  /* layer map */
+  .lmap{display:flex;flex-direction:column}
+  .lrow{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center;
+    border:1px solid var(--line);border-left-width:6px;border-radius:14px;background:var(--panel);
+    padding:16px 18px;cursor:pointer;transition:.15s;box-shadow:var(--shadow);text-align:left}
+  .lrow:hover{transform:translateX(4px);box-shadow:0 12px 30px rgba(29,78,216,.13)}
+  .lrow .ln{font-size:15.5px;font-weight:800}
+  .lrow .ln small{display:block;font-size:11.5px;font-weight:600;color:var(--ink-faint);margin-top:2px}
+  .lrow .ld{font-size:13px;color:var(--ink-soft)}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+  .chip-s{font-size:11.5px;padding:3px 10px;border-radius:99px;background:var(--slate-bg);
+    color:var(--ink-soft);border:1px solid var(--line)}
+  .arr{text-align:center;color:#c3ccd8;font-size:17px;padding:2px 0}
+  .c1{border-left-color:#0ea5e9}.c2{border-left-color:#6366f1}
+  .c3{border-left-color:#16a34a}.c4{border-left-color:#d97706}.c5{border-left-color:#64748b}
+
+  /* perspective cards */
+  .pers{border-radius:14px;padding:17px 19px;border:1px solid}
+  .pers.g{background:var(--green-bg);border-color:var(--green-line)}
+  .pers.a{background:var(--amber-bg);border-color:var(--amber-line)}
+  .pers.b{background:var(--blue-bg);border-color:var(--blue-line)}
+  .pers .pt{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .pers .pd{font-size:13px;color:#334155}
+  .pers .pq{font-size:12.5px;font-style:italic;color:#475569;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,0,0,.15)}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;
+    color:var(--ink-soft);margin-bottom:12px}
+  .legend .it{display:flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  details.mod{border:1px solid var(--line);border-radius:13px;background:var(--panel);
+    box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+  details.mod>summary{cursor:pointer;list-style:none;padding:14px 18px;font-weight:800;
+    font-size:15px;display:flex;align-items:center;gap:10px}
+  details.mod>summary::-webkit-details-marker{display:none}
+  details.mod>summary .chev{margin-left:auto;color:var(--ink-faint);transition:.2s}
+  details.mod[open]>summary .chev{transform:rotate(90deg)}
+  details.mod .bd{padding:2px 18px 18px;border-top:1px solid var(--line);font-size:14px}
+  details.mod .bd>*:first-child{margin-top:12px}
+
+  .minicard{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;box-shadow:var(--shadow)}
+  .minicard b{font-size:14.5px}
+  .minicard .meta{font-size:12px;color:var(--ink-soft);margin:4px 0}
+  .minicard .note-s{font-size:11.5px;color:var(--ink-faint)}
+
+  .bar{height:9px;border-radius:99px;background:var(--slate-bg);overflow:hidden;margin-top:5px}
+  .bar i{display:block;height:100%;border-radius:99px}
+
+  footer.pfoot{max-width:1220px;margin:40px 34px 0;padding:22px 0;border-top:1px solid var(--line);
+    font-size:12px;color:var(--ink-faint)}
+  .toplink{position:fixed;right:26px;bottom:26px;width:44px;height:44px;border-radius:50%;
+    background:var(--brand);color:#fff;display:none;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px rgba(29,78,216,.35);font-size:18px;z-index:20}
+  @media(max-width:760px){.side{position:fixed;z-index:60;transform:translateX(-100%);transition:.2s}
+    .side.open{transform:none;box-shadow:0 0 50px rgba(0,0,0,.2)}
+    .menu-btn{display:flex!important}}
+  .menu-btn{display:none;position:fixed;left:14px;top:14px;z-index:70;width:42px;height:42px;
+    border-radius:11px;background:var(--brand);color:#fff;align-items:center;justify-content:center;font-size:20px}
+</style>
+</head>
+<body>
+<div class="menu-btn" id="menuBtn">☰</div>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="t">全国电力市场<br>规则架构台</div>
+      <span class="v">v2.0 · 多界面版</span>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label"><span class="sw" style="background:#1d4ed8"></span>总览</div>
+      <a class="item" data-v="overview"><span class="ix">◈</span>架构驾驶舱</a>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label"><span class="sw" style="background:#0ea5e9"></span>L1 政策宪法层</div>
+      <a class="item" data-v="policy"><span class="ix">1.1</span>四大文件传导链</a>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label"><span class="sw" style="background:#6366f1"></span>L2 市场结构层</div>
+      <a class="item" data-v="market"><span class="ix">2.1</span>三层市场架构</a>
+      <a class="item" data-v="inter"><span class="ix">2.2</span>省间与全国统一</a>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label"><span class="sw" style="background:#16a34a"></span>L3 收益机制层</div>
+      <a class="item" data-v="spot"><span class="ix">3.1</span>现货价差</a>
+      <a class="item" data-v="capacity"><span class="ix">3.2</span>容量电价</a>
+      <a class="item" data-v="ancillary"><span class="ix">3.3</span>辅助服务·调频</a>
+      <a class="item" data-v="renew"><span class="ix">3.4</span>新能源机制电价</a>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label"><span class="sw" style="background:#d97706"></span>L4 省级执行层</div>
+      <a class="item" data-v="province"><span class="ix">4.1</span>六维矩阵与省份</a>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label"><span class="sw" style="background:#64748b"></span>L5 实证校验层</div>
+      <a class="item" data-v="runtime"><span class="ix">5.1</span>运行实效</a>
+    </div>
+
+    <div class="grp">
+      <div class="grp-label"><span class="sw" style="background:#0f766e"></span>附录</div>
+      <a class="item" data-v="ledger"><span class="ix">§</span>数据台账</a>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+  <!-- ========== 0. 架构驾驶舱 ========== -->
+  <section class="view on" id="v-overview">
+    <div class="vhead">
+      <div class="crumb">总览 / OVERVIEW</div>
+      <h1>架构驾驶舱</h1>
+      <p class="lede">全国统一电力市场是一个「政策宪法 → 市场骨架 → 收益机制 → 省级落地 → 实证校验」的五层结构。本台把这五层拆成 10 个独立界面，逐层下钻。点击下方任一层或左侧导航进入。</p>
+    </div>
+
+    <div class="grid g4" style="margin-bottom:20px">
+      <div class="stat g"><div class="n">10</div><div class="l">省级现货正式运行</div><div class="s">晋粤鲁甘蒙西鄂浙+冀南网皖闽</div></div>
+      <div class="stat a"><div class="n">18</div><div class="l">连续结算试运行</div><div class="s">另南方区域五省区统一出清</div></div>
+      <div class="stat b"><div class="n">31</div><div class="l">已开展机制电价竞价</div><div class="s">累计宣布约 2200 亿 kWh</div></div>
+      <div class="stat sk"><div class="n">13</div><div class="l">出台容量补偿/电价</div><div class="s">114 号文后 5 省细则落地</div></div>
+    </div>
+
+    <div class="card">
+      <h3>五层架构导航图 <span class="tagx">点击下钻</span></h3>
+      <div class="lmap" id="lmap">
+        <div class="lrow c1" data-go="policy">
+          <div class="ln">L1 政策宪法层<small>规则源点</small></div>
+          <div><div class="ld">四大中央文件确立全国统一市场的规则坐标，自上而下层层传导。</div>
+            <div class="chips"><span class="chip-s">136号文</span><span class="chip-s">114号文</span><span class="chip-s">394号文</span><span class="chip-s">196号文</span></div></div>
+        </div>
+        <div class="arr">▼</div>
+        <div class="lrow c2" data-go="market">
+          <div class="ln">L2 市场结构层<small>市场骨架</small></div>
+          <div><div class="ld">统一市场、两级运作：全国统一出清 → 区域/省间 → 33 个省级价格发现。</div>
+            <div class="chips"><span class="chip-s">三层架构</span><span class="chip-s">省间三支柱</span><span class="chip-s">转正时间线</span></div></div>
+        </div>
+        <div class="arr">▼</div>
+        <div class="lrow c3" data-go="spot">
+          <div class="ln">L3 收益机制层<small>钱从哪来</small></div>
+          <div><div class="ld">四类主体收益来源：现货价差、容量电价、辅助服务、新能源机制电价。四个独立界面逐一展开。</div>
+            <div class="chips"><span class="chip-s">现货价差</span><span class="chip-s">容量电价</span><span class="chip-s">调频</span><span class="chip-s">机制电价</span></div></div>
+        </div>
+        <div class="arr">▼</div>
+        <div class="lrow c4" data-go="province">
+          <div class="ln">L4 省级执行层<small>落地实况</small></div>
+          <div><div class="ld">33 省六维红绿灯矩阵 + 10 家现货转正省份详情。</div>
+            <div class="chips"><span class="chip-s">六维矩阵</span><span class="chip-s">转正名单</span></div></div>
+        </div>
+        <div class="arr">▼</div>
+        <div class="lrow c5" data-go="runtime">
+          <div class="ln">L5 实证校验层<small>验证底座</small></div>
+          <div><div class="ld">运行实效实测数据 + 数据台账（白/灰/黑箱溯源登记）。</div>
+            <div class="chips"><span class="chip-s">Q2收益</span><span class="chip-s">2h→4h倍率</span><span class="chip-s">数据台账</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>价差三视角 · 全台通用读法 <span class="tagx">跨视角数字不可直接比较</span></h3>
+      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:0">引自《电价三层视角与价差审计专题报告》（2026-09-20）。三个视角两两之间的 gap 本身即信息。</p>
+      <div class="grid g3 mt">
+        <div class="pers g">
+          <div class="pt">上帝视角 <span class="pill p-green">理论上限</span></div>
+          <div class="pd">全分辨率 × 事后全知。回答「池子有多大」——市场设计坐标，本身不产生收益，但没有它不知道天花板在哪。</div>
+          <div class="pq">对应指标：策略价差、名义容量标准</div>
+        </div>
+        <div class="pers a">
+          <div class="pt">执行视角 <span class="pill p-amber">含摩擦结算</span></div>
+          <div class="pd">全分辨率 × 事前有限信息。回答「你能舀走多少」——含预测误差、偏差考核、申报规则与运行约束的真实现金流。</div>
+          <div class="pq">对应指标：到手价差、实得容量电费</div>
+        </div>
+        <div class="pers b">
+          <div class="pt">经评视角 <span class="pill p-blue">年化均值</span></div>
+          <div class="pd">年化平滑 × 事后。回答「值多少钱、能否融资」——波动现金流翻译成资本的通用货币（IRR/融资对齐的定价坐标系）。</div>
+          <div class="pq">对应指标：年化 IRR、可融资性</div>
+        </div>
+      </div>
+      <div class="note"><b>三个 gap 指标：</b>捕获率 = 执行 ÷ 上帝（团队能力）｜波动率红利 = 上帝 ÷ 经评（分布价值）｜资本故事距离 = 执行 ÷ 经评。</div>
+    </div>
+  </section>
+
+  <!-- ========== 1. 政策宪法层 ========== -->
+  <section class="view" id="v-policy">
+    <div class="vhead">
+      <div class="crumb">L1 政策宪法层 / POLICY</div>
+      <h1><span class="chip" style="background:#0ea5e9">L1</span>四大文件传导链</h1>
+      <p class="lede">全国统一电力市场的"根本法"。四份中央文件各自确立一类机制，并向下传导至省级市场与市场主体。理解这四份文件的价格机制，是读懂后续所有收益模型的起点。</p>
+    </div>
+
+    <div class="grid g2">
+      <div class="card" style="border-top:4px solid #0ea5e9">
+        <h3>136 号文 <span class="pill p-blue">发改价格〔2025〕136号</span></h3>
+        <p class="src" style="margin-top:0">2025-02 印发 · 存量/增量分治</p>
+        <p><b>核心机制：</b>新能源全部电量入市；机制电价差价结算；存量/增量竞价。</p>
+        <p><b>传导对象：</b>新能源场站 / 投资方 / 售电公司</p>
+        <p><b>影响面：</b>截至 2026-09，31 省级行政区机制电价全覆盖，全国约 30 省组织 40 轮竞价。<span class="tip" title="分布式项目近 25 万个，出清电量仅占 7%">分布式项目近 25 万个，出清电量仅占 7%（智汇光伏统计）</span>。</p>
+        <div class="chips"><span class="chip-s">新能源全部入市</span><span class="chip-s">差价结算</span><span class="chip-s">存量/增量竞价</span></div>
+      </div>
+
+      <div class="card" style="border-top:4px solid #0ea5e9">
+        <h3>114 号文 <span class="pill p-blue">发改价格〔2026〕114号</span></h3>
+        <p class="src" style="margin-top:0">2026-01-30 发布 · 首次确立储能容量电价</p>
+        <p><b>核心机制：</b>首次在国家层面确立电网侧独立储能容量电价——以煤电容量电价标准为基础，按顶峰能力折算，清单制管理；煤电容量回收比例 ≥50%；建立可靠容量补偿机制。</p>
+        <p><b>传导对象：</b>储能 / 煤电 / 气电 / 抽蓄</p>
+        <div class="chips"><span class="chip-s">容量电价首创</span><span class="chip-s">按顶峰折算</span><span class="chip-s">清单制</span></div>
+      </div>
+
+      <div class="card" style="border-top:4px solid #0ea5e9">
+        <h3>394 号文 <span class="pill p-blue">发改办体改〔2025〕394号</span></h3>
+        <p class="src" style="margin-top:0">2025-04-29 · 现货市场建设时间表</p>
+        <p><b>核心机制：</b>现货市场建设时间表——2025 底全覆盖；鄂、浙转正，皖、陕 2026-06 前转正等。</p>
+        <p><b>传导对象：</b>省级市场 / 交易机构</p>
+        <p><b>影响面：</b>直接驱动省级现货市场转正潮，2026 年内新增安徽、福建、河北南网三省转正。</p>
+        <div class="chips"><span class="chip-s">转正时间表</span><span class="chip-s">2025 底全覆盖</span></div>
+      </div>
+
+      <div class="card" style="border-top:4px solid #0ea5e9">
+        <h3>196 号文 <span class="pill p-blue">发改价格〔2024〕196号</span></h3>
+        <p class="src" style="margin-top:0">2024-02-08 · 辅助服务价格机制</p>
+        <p><b>核心机制：</b>辅助服务价格机制——调频里程单一制、上限 0.015 元/kW、费用传导规则。</p>
+        <p><b>传导对象：</b>调频 / 备用 / 调峰市场主体</p>
+        <p><b>影响面：</b>确立"高单价×小蛋糕×先到先得"的调频格局，需求天花板 ≈ 统调负荷 1~2%。</p>
+        <div class="chips"><span class="chip-s">调频里程单一制</span><span class="chip-s">上限 0.015 元/kW</span><span class="chip-s">费用传导</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>传导关系图 <span class="tagx">文件 → 机制 → 主体</span></h3>
+      <div class="lmap">
+        <div class="lrow c1"><div class="ln">新能源侧</div><div><div class="ld"><b>136号文</b> → 全部电量入市 + 差价结算 → 新能源场站/投资方/售电公司</div></div></div>
+        <div class="arr">▼</div>
+        <div class="lrow c1"><div class="ln">灵活性侧</div><div><div class="ld"><b>114号文</b> → 容量电价 + 可靠容量补偿 → 储能/煤电/气电/抽蓄</div></div></div>
+        <div class="arr">▼</div>
+        <div class="lrow c2"><div class="ln">市场侧</div><div><div class="ld"><b>394号文</b> → 现货建设时间表 → 省级市场/交易机构</div></div></div>
+        <div class="arr">▼</div>
+        <div class="lrow c3"><div class="ln">服务侧</div><div><div class="ld"><b>196号文</b> → 辅助服务价格机制 → 调频/备用/调峰主体</div></div></div>
+      </div>
+      <p class="src">架构与转正信息源：国家发改委 394 号文（2025-04）、各省发改委转正通知、电力行业公开报道（时点 2026-09）。</p>
+    </div>
+  </section>
+
+  <!-- ========== 2. 三层市场架构 ========== -->
+  <section class="view" id="v-market">
+    <div class="vhead">
+      <div class="crumb">L2 市场结构层 / MARKET</div>
+      <h1><span class="chip" style="background:#6366f1">L2</span>三层市场架构</h1>
+      <p class="lede">全国统一市场、两级运作：全国统一电力市场顶层设计 → 区域市场（南方区域/省间/京津冀）→ 33 个省级市场。价格发现自上而下传导，规则自上而下渗透。</p>
+    </div>
+
+    <div class="lmap" style="margin-bottom:20px">
+      <div class="lrow c2"><div class="ln">全国统一市场<small>中央文件层</small></div>
+        <div><div class="ld">基本规则体系 136/114/394/196 号文。市场设计的宪法层。</div></div></div>
+      <div class="arr">▼</div>
+      <div class="lrow c2"><div class="ln">区域 + 省间<small>跨省资源配置层</small></div>
+        <div><div class="ld">南方区域连续运行、省间现货规则获批、京津冀模拟试运行。</div></div></div>
+      <div class="arr">▼</div>
+      <div class="lrow c2"><div class="ln">33 个省级市场<small>价格发现层</small></div>
+        <div><div class="ld"><span class="pill p-green">10 家正式</span> <span class="pill p-amber">22 家试运行</span> <span class="pill p-gray">西藏未开展</span>。河北分南网/冀北、蒙东/蒙西分计，共 33 个省级市场。</div></div></div>
+    </div>
+
+    <div class="card">
+      <h3>省级现货市场转正时间线 <span class="tagx">截至 2026-09-30，共 10 家</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>#</th><th>省份</th><th>转正时间</th><th>依据 / 备注</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td><b>山西</b></td><td>2023-12</td><td>首批转正；一次调频 6 元/MW 固定补偿 + 二次 5~10 元竞价</td></tr>
+            <tr><td class="num">2</td><td><b>广东</b></td><td>2023-12</td><td>首批转正；南方区域核心；现货上限 1899 / 下限 -50 元/MWh</td></tr>
+            <tr><td class="num">3</td><td><b>山东</b></td><td>2024-06</td><td>调频上限 12 / 下限 0.1 元/MW；Q2 收益 215.54 万/站</td></tr>
+            <tr><td class="num">4</td><td><b>甘肃</b></td><td>2024-09</td><td>调频实测 170 万/年；光伏利用率低点 82.5%</td></tr>
+            <tr><td class="num">5</td><td><b>蒙西</b></td><td>2025</td><td>出清上下限差 5206 元/MWh（深度负电价空间）</td></tr>
+            <tr><td class="num">6</td><td><b>湖北</b></td><td>2025-06-06</td><td>394 号文推动转正</td></tr>
+            <tr><td class="num">7</td><td><b>浙江</b></td><td>2025-08-08</td><td>394 号文推动转正</td></tr>
+            <tr><td class="num">8</td><td><b>河北南网</b></td><td>2026-08-01</td><td>冀发改运行〔2026〕719号；2h→4h 倍率 >1.80</td></tr>
+            <tr><td class="num">9</td><td><b>安徽</b></td><td>2026-09-09</td><td>容量机制 165 元/T=6h（征求意见稿）；倍率 >1.80</td></tr>
+            <tr><td class="num">10</td><td><b>福建</b></td><td>2026-09-30</td><td>全国第 10 家转正</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">口径说明：「受电型省份」（京津沪）未独立建设省级现货，按灰标注；河北分南网/冀北、蒙东/蒙西分计，共 33 个省级市场。</p>
+    </div>
+  </section>
+
+  <!-- ========== 3. 省间与全国统一 ========== -->
+  <section class="view" id="v-inter">
+    <div class="vhead">
+      <div class="crumb">L2 市场结构层 / INTER-PROVINCIAL</div>
+      <h1><span class="chip" style="background:#6366f1">L2</span>省间与全国统一市场</h1>
+      <p class="lede">省间现货 + 省间中长期 + 区域市场，是全国统一市场的三根支柱。2026 年主线索：省间现货规则获批、南方区域转入正式运行方案、京津冀模拟试运行启动。</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="card" style="border-top:4px solid #6366f1">
+        <h3>省间现货</h3>
+        <p>规则<span class="pill p-green">已获批</span>。跨省实时优化配置的核心，衔接省间中长期与省级现货。</p>
+        <p class="src">2026 主线索之一。</p>
+      </div>
+      <div class="card" style="border-top:4px solid #6366f1">
+        <h3>省间中长期</h3>
+        <p>跨省电量交易的中长期通道，与现货形成"长协锁价+现货纠偏"的组合。</p>
+      </div>
+      <div class="card" style="border-top:4px solid #6366f1">
+        <h3>区域市场</h3>
+        <p>南方区域<span class="pill p-blue">转入正式运行方案</span>；京津冀<span class="pill p-amber">模拟试运行启动</span>。区域市场在省间与省级之间承上启下。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>全国统一市场建设路标 <span class="tagx">394 号文 + 蓝皮书</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>阶段</th><th>时间节点</th><th>标志</th></tr></thead>
+          <tbody>
+            <tr><td>规则奠基</td><td>2024-02 ~ 2025-04</td><td>196 / 136 / 394 号文先后出台，规则体系闭合</td></tr>
+            <tr><td>省级全覆盖</td><td>2025 底</td><td>394 号文要求现货市场建设全覆盖</td></tr>
+            <tr><td>转正提速</td><td>2025 ~ 2026-09</td><td>鄂浙皖陕闽冀南网密集转正，10 家正式运行</td></tr>
+            <tr><td>省间贯通</td><td>2026</td><td>省间现货规则获批，南方区域转正式运行</td></tr>
+            <tr><td>全国统一</td><td>蓝皮书指引</td><td>统一市场顶层设计落地，全国一张网</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 4. 现货价差 ========== -->
+  <section class="view" id="v-spot">
+    <div class="vhead">
+      <div class="crumb">L3 收益机制层 / SPOT SPREAD</div>
+      <h1><span class="chip" style="background:#16a34a">L3·①</span>现货价差</h1>
+      <p class="lede">价差是储能最直接的收益来源。注意「策略价差（全知视角理论最大）」≠「到手价差（五层收窄后净口径）」。本界面所有价差数字均标注所属视角与分母口径。</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="stat g"><div class="n">262.5 <small>元/MWh</small></div><div class="l">2026年7月 储能价差理论收益 <span class="pill p-green">上帝·2h</span></div><div class="s">同比 -14.4%，环比 -9.0%</div></div>
+      <div class="stat a"><div class="n">587 / 452</div><div class="l">蒙东 / 山西（7月全国前二）</div><div class="s">新疆 135 为最低样本</div></div>
+      <div class="stat b"><div class="n">90.9% / 91.4%</div><div class="l">2026H1 风电 / 光伏利用率</div><div class="s">同比 -2.3 / -2.6pct，三年连降</div></div>
+    </div>
+
+    <div class="card">
+      <h3>2026Q2 各省策略价差 <span class="tagx">2h 储能·全知视角·元/MWh</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>档位</th><th>省份</th><th>口径 / 数值</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill p-red">&gt;400 档</span></td><td>海南、黑龙江</td><td>披露精确值：海南 437.48、黑龙江 421.48</td></tr>
+            <tr><td><span class="pill p-amber">250~400 档</span></td><td>山西 / 山东 / 吉林 / 蒙东 / 河北南网 / 陕西</td><td>以区间带呈现</td></tr>
+            <tr><td><span class="pill p-gray">&lt;250 档</span></td><td>其余 20 省</td><td>低于 250，不逐一点绘</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">源：飔合科技《2026年Q2独立储能电站各省收益测算》（北极星电力网 2026-08-10 转载）。</p>
+    </div>
+
+    <div class="card">
+      <h3>行政 vs 现货「剪刀差」 <span class="tagx">测算第一大误判源</span></h3>
+      <p>多数省份行政分时峰谷差 &gt; 现货均价峰谷差，两者不能混用。</p>
+      <div class="tw" style="margin-top:10px">
+        <table class="t">
+          <thead><tr><th>省份</th><th>行政分时峰谷差</th><th>现货均价峰谷差</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><b>甘肃</b></td><td class="num">0.1399 元/kWh <span class="pill p-gray">约 139.9 元/MWh</span></td><td class="num">350 元/MWh <span class="pill p-blue">现货</span></td><td>行政口径显著低估现货价差，测算若用行政价将严重低估收益</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">源：落基山研究所《2026电力市场化改革与电价体系洞察》（2026-05）。行政/现货剪刀差是测算第一大误判源。</p>
+    </div>
+
+    <div class="card">
+      <h3>现货市场出清价格上下限 <span class="tagx">元/MWh</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>区域</th><th>上限</th><th>下限</th><th>价差空间</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td><b>蒙西</b></td><td class="num">—</td><td class="num">—</td><td class="num"><span class="pill p-red">差 5206</span></td><td>深度负电价空间，出清上下限差达 5206 元/MWh</td></tr>
+            <tr><td><b>广东（南方区域）</b></td><td class="num">1899</td><td class="num">-50</td><td class="num">1949</td><td>另设 0.695 元/kWh 二级限价熔断</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">源：RMI 同报告 + 南方区域 2026 方案。</p>
+    </div>
+  </section>
+
+  <!-- ========== 5. 容量电价 ========== -->
+  <section class="view" id="v-capacity">
+    <div class="vhead">
+      <div class="crumb">L3 收益机制层 / CAPACITY PRICE</div>
+      <h1><span class="chip" style="background:#16a34a">L3·②</span>容量电价（114号文体系）</h1>
+      <p class="lede">114 号文首次在国家层面确立电网侧独立储能容量电价。核心公式有五层折算，<b>名义 ≠ 实得</b>，每一层都可能打折。</p>
+    </div>
+
+    <div class="card">
+      <h3>实得容量电费公式</h3>
+      <div class="formula">实得容量电费 ＝ 名义标准 × <span class="hl">Min(放电时长 t ÷ T值, 1)</span> × (1−厂用电率) × 供需系数 × 考核清算系数
+
+<span class="cm">// 名义 ≠ 实得：每一层都可能打折。最优时长 ≈ 本省 T 值，超过 T 后容量电费封顶。</span></div>
+      <div class="note"><b>读法：</b>把各省机制公告的"名义标准"（元/T）当收入是错的。真实到手要连乘五层折算——尤其是 <code>Min(t/T,1)</code> 这一层，直接决定 2h 系统能拿到多少。</div>
+    </div>
+
+    <div class="card">
+      <h3>各省容量机制状态 <span class="tagx">截至 2026-09，共 13 省出台政策</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>省份</th><th>名义标准</th><th>T 值</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td><b>安徽</b></td><td class="num">165 元/T</td><td class="num">6h</td><td><span class="pill p-amber">征求意见稿</span></td></tr>
+            <tr><td><b>河南</b></td><td class="num">330 元</td><td class="num">—</td><td><span class="pill p-amber">征求意见稿</span> <span class="pill p-gray">按灰箱管理</span></td></tr>
+            <tr><td colspan="4" style="color:var(--ink-faint)">其余 11 省已出台政策；114 号文后 5 省细则落地。详见数据台账与各省细则。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">源：中国储能网/北极星储能网梳理（2026-07-10）+ 陕西细则全文转载 + playbook 分省锚点（2026-09 复核）。</p>
+    </div>
+
+    <div class="card" style="border-left:5px solid var(--red)">
+      <h3>2h 储能的黄昏：折算比例与实得</h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>省份</th><th>T 值</th><th>名义标准</th><th>2h 系统实得</th><th>折算比例</th></tr></thead>
+          <tbody>
+            <tr><td><b>青海</b></td><td class="num">8h</td><td class="num">185</td><td class="num"><span class="pill p-red">38 元</span></td><td class="num">≈20.5%</td></tr>
+            <tr><td><b>陕西</b></td><td class="num">6h</td><td class="num">165</td><td class="num"><span class="pill p-red">55 元</span></td><td class="num">≈33.3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">机构测算。折算比例 = 2h 实得 ÷ 名义标准（即 Min(2/T,1)）。</p>
+      <div class="warn"><b>结论：</b>4 小时是及格线，6~8 小时是优等生。2h 系统在 T 值高的省份拿到的容量收益极薄。</div>
+    </div>
+  </section>
+
+  <!-- ========== 6. 辅助服务 ========== -->
+  <section class="view" id="v-ancillary">
+    <div class="vhead">
+      <div class="crumb">L3 收益机制层 / ANCILLARY SERVICES</div>
+      <h1><span class="chip" style="background:#16a34a">L3·③</span>辅助服务 · 调频是主战场</h1>
+      <p class="lede">196 号文确立调频里程单一制价格机制。<b>调频 = 高单价 × 小蛋糕 × 先到先得</b>，需求天花板 ≈ 统调负荷 1~2%。</p>
+    </div>
+
+    <div class="card">
+      <h3>调频里程价格机制</h3>
+      <div class="formula">调频费用 ＝ 出清价 × 调频里程 × 性能系数    <span class="cm">// 性能系数 ≤ 2</span>
+里程出清价上限 ＝ 0.015 元/kW（15 元/MW）</div>
+      <p class="src">源：发改价格〔2024〕196号。</p>
+    </div>
+
+    <div class="card">
+      <h3>各省调频里程申报价上限 <span class="tagx">元/MW</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>省份 / 区域</th><th>上限</th><th>下限</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td><b>山东</b>（2026 规则）</td><td class="num">12</td><td class="num">0.1</td><td>—</td></tr>
+            <tr><td><b>陕西 / 宁夏</b></td><td class="num">15</td><td class="num">0</td><td>0~15 区间</td></tr>
+            <tr><td><b>南方区域</b>（2026 版）</td><td class="num">—</td><td class="num">动态，最低可降至 1</td><td>下限动态调整</td></tr>
+            <tr><td><b>山西</b></td><td class="num">一次 6（固定补偿）</td><td class="num">二次 5~10（竞价）</td><td>一次调频固定 + 二次竞价</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>100MW 独立储能站年调频收入实测 <span class="tagx">万元/年</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>省份</th><th>年调频收入</th><th>来源 / 口径</th></tr></thead>
+          <tbody>
+            <tr><td><b>山西</b></td><td class="num"><span class="pill p-green">约 1000 万</span></td><td>2026Q1 总收益反推，全国最高 <span class="pill p-blue">执行</span></td></tr>
+            <tr><td><b>蒙西</b></td><td class="num">约 300 万</td><td>12 亿盘子 × 35% 份额摊薄 <span class="pill p-blue">执行</span></td></tr>
+            <tr><td><b>甘肃</b></td><td class="num">170 万</td><td>广发证券 2025 实测 <span class="pill p-green">白箱</span></td></tr>
+            <tr><td><b>宁夏</b></td><td class="num">70 万</td><td>广发证券 2025 实测 <span class="pill p-green">白箱</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">源：广发证券 2025 实测、山西 2026Q1 反推、蒙西盘子摊薄。</p>
+      <div class="warn"><b>反高估纪律：</b>禁止「价格上限 × 理论调用频次」外推。案例——国能日新甘肃 38 次/天 → 测算 3745 万 vs 实测 170 万，<b>高估 22 倍</b>。调频收益必须用实测口径。</div>
+    </div>
+  </section>
+
+  <!-- ========== 7. 新能源机制电价 ========== -->
+  <section class="view" id="v-renew">
+    <div class="vhead">
+      <div class="crumb">L3 收益机制层 / RENEWABLES</div>
+      <h1><span class="chip" style="background:#16a34a">L3·④</span>新能源机制电价（136号文体系）</h1>
+      <p class="lede">136 号文：新能源原则上全部电量入市，存量/增量项目机制电价差价结算。截至 2026-09，31 省级行政区机制电价全覆盖。</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="stat b"><div class="n">31</div><div class="l">省级行政区机制电价全覆盖</div><div class="s">蒙东/蒙西为政策口径不设</div></div>
+      <div class="stat"><div class="n">40<small> 轮</small></div><div class="l">约 30 省已组织竞价</div><div class="s">分布式项目近 25 万个</div></div>
+      <div class="stat a"><div class="n">7<small>%</small></div><div class="l">分布式出清电量占比</div><div class="s">智汇光伏统计</div></div>
+    </div>
+
+    <div class="card">
+      <h3>各省机制电价竞价结果 <span class="tagx">光伏 vs 风电·元/kWh·截至 2026-09</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>口径说明</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>蒙西 / 蒙东</td><td>政策口径不设机制电价</td></tr>
+            <tr><td>广东陆上风电</td><td>不参与竞价（政策）</td></tr>
+            <tr><td>同价省份</td><td>统一竞价口径</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="warn"><b>2026-07 以来「以价换量」退潮：</b>黑龙江风电 <span class="pill p-red">+25%</span>、新疆光伏 <span class="pill p-red">+73%</span>——引用前务必复核最新批次。</div>
+      <p class="src">白箱标源 / 灰箱标注。</p>
+    </div>
+
+    <div class="card">
+      <h3>消纳实况：利用率逐年回落 <span class="tagx">国家能源局</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>年份</th><th>风电利用率</th><th>光伏利用率</th><th>同比</th></tr></thead>
+          <tbody>
+            <tr><td><b>2026H1</b></td><td class="num">90.9%</td><td class="num">91.4%</td><td class="num">-2.3 / -2.6 pct</td></tr>
+            <tr><td>2025 全年</td><td class="num">94.3%</td><td class="num">94.8%</td><td class="num">—</td></tr>
+            <tr><td>2024 全年</td><td class="num">95.9%</td><td class="num">96.8%</td><td class="num">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>1-2 月低点：</b>西藏风电 67.5% / 光伏 60.8%、青海光伏 78.7%、甘肃光伏 82.5%。</p>
+      <p class="src">源：国家能源局 / 电力行业规划研究与监测预警中心。连续三年回落。</p>
+    </div>
+  </section>
+
+  <!-- ========== 8. 省级执行 ========== -->
+  <section class="view" id="v-province">
+    <div class="vhead">
+      <div class="crumb">L4 省级执行层 / PROVINCE</div>
+      <h1><span class="chip" style="background:#d97706">L4</span>33 省六维红绿灯矩阵</h1>
+      <p class="lede">六维：①现货状态 ②中长期市场 ③辅助服务 ④容量机制 ⑤储能准入 ⑥新能源入市。绿=机制成熟/已落地，琥珀=试运行/建设中，灰=未开展/待出。</p>
+    </div>
+
+    <div class="card">
+      <div class="legend">
+        <span class="it"><span class="sw" style="background:#16a34a"></span>绿 = 机制成熟/已落地</span>
+        <span class="it"><span class="sw" style="background:#b45309"></span>琥珀 = 试运行/建设中</span>
+        <span class="it"><span class="sw" style="background:#9ca3af"></span>灰 = 未开展/待出</span>
+        <span style="margin-left:auto;color:var(--ink-faint)">单元格为框架级判定，细则参数见省份详情与数据台账</span>
+      </div>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>状态分组</th><th>①现货</th><th>②中长期</th><th>③辅助服务</th><th>④容量机制</th><th>⑤储能准入</th><th>⑥新能源入市</th><th>覆盖</th></tr></thead>
+          <tbody>
+            <tr><td><b>正式运行</b></td><td><span class="pill p-green">绿</span></td><td><span class="pill p-green">绿</span></td><td><span class="pill p-green">绿</span></td><td><span class="pill p-amber">琥珀</span></td><td><span class="pill p-green">绿</span></td><td><span class="pill p-green">绿</span></td><td class="num">10 家</td></tr>
+            <tr><td><b>连续结算试运行</b></td><td><span class="pill p-amber">琥珀</span></td><td><span class="pill p-green">绿</span></td><td><span class="pill p-amber">琥珀</span></td><td><span class="pill p-gray">灰</span></td><td><span class="pill p-amber">琥珀</span></td><td><span class="pill p-green">绿</span></td><td class="num">18 家</td></tr>
+            <tr><td><b>未开展/待出</b></td><td><span class="pill p-gray">灰</span></td><td><span class="pill p-amber">琥珀</span></td><td><span class="pill p-gray">灰</span></td><td><span class="pill p-gray">灰</span></td><td><span class="pill p-gray">灰</span></td><td><span class="pill p-amber">琥珀</span></td><td>西藏等</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">口径说明：「受电型省份」（京津沪）未独立建设省级现货，按灰标注；河北分南网/冀北、蒙东/蒙西分计，共 33 个省级市场。逐省 6 维细表在原站依赖后台台账，本台以分组状态 + 10 家转正详情诚实呈现，不编造单元格。</p>
+    </div>
+
+    <div class="card">
+      <h3>10 家现货转正省份详情</h3>
+      <div class="grid g2">
+        <div class="minicard"><b>山西</b> <span class="pill p-blue">2023-12</span><div class="meta">首批转正</div><div class="note-s">策略价差前列；一次调频 6 元/MW 固定补偿 + 二次 5~10 元竞价</div></div>
+        <div class="minicard"><b>广东</b> <span class="pill p-blue">2023-12</span><div class="meta">首批转正 · 南方区域核心</div><div class="note-s">现货上限 1899 / 下限 -50 元/MWh</div></div>
+        <div class="minicard"><b>山东</b> <span class="pill p-blue">2024-06</span><div class="meta">调频市场活跃</div><div class="note-s">调频上限 12 / 下限 0.1 元/MW；Q2 收益 215.54 万/站</div></div>
+        <div class="minicard"><b>甘肃</b> <span class="pill p-blue">2024-09</span><div class="meta">西北代表</div><div class="note-s">调频实测 170 万/年；光伏利用率低点 82.5%</div></div>
+        <div class="minicard"><b>蒙西</b> <span class="pill p-blue">2025</span><div class="meta">深度负电价空间</div><div class="note-s">出清上下限差 5206 元/MWh</div></div>
+        <div class="minicard"><b>湖北</b> <span class="pill p-blue">2025-06-06</span><div class="meta">394 号文推动</div><div class="note-s">华中区域枢纽</div></div>
+        <div class="minicard"><b>浙江</b> <span class="pill p-blue">2025-08-08</span><div class="meta">394 号文推动</div><div class="note-s">华东负荷中心</div></div>
+        <div class="minicard"><b>河北南网</b> <span class="pill p-blue">2026-08-01</span><div class="meta">冀发改运行〔2026〕719号</div><div class="note-s">2h→4h 倍率 &gt;1.80</div></div>
+        <div class="minicard"><b>安徽</b> <span class="pill p-blue">2026-09-09</span><div class="meta">容量机制 165 元/T=6h</div><div class="note-s">征求稿；倍率 &gt;1.80</div></div>
+        <div class="minicard"><b>福建</b> <span class="pill p-blue">2026-09-30</span><div class="meta">全国第 10 家</div><div class="note-s">东南沿海新转正</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 9. 运行实效 ========== -->
+  <section class="view" id="v-runtime">
+    <div class="vhead">
+      <div class="crumb">L5 实证校验层 / RUNTIME</div>
+      <h1><span class="chip" style="background:#64748b">L5</span>运行实效</h1>
+      <p class="lede">储能侧实测：策略价差（全知视角理论最大）→循环次数→收益→倍率。收益口径 = Q2 电能量毛收入，<b>不含输配电费/系统运行费/政府性基金</b>（充电侧成本另计）。</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="stat"><div class="n">30~312<small> 万</small></div><div class="l">2026Q2 2h 储能季度收益（100MW）</div><div class="s">黑龙江 311.75 居首，四川 30.19 尾部</div></div>
+      <div class="stat a"><div class="n">1.50~1.87</div><div class="l">2h→4h 收益倍率（Q2 月均）</div><div class="s">宁夏 1.87 最高</div></div>
+      <div class="stat sk"><div class="n">1077号</div><div class="l">第四监管周期输配电价</div><div class="s">2026-08-01 执行</div></div>
+    </div>
+
+    <div class="card">
+      <h3>2026Q2 2h 储能季度收益 <span class="tagx">万元/站·100MW 口径</span></h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>省份</th><th>Q2 收益</th><th>备注</th><th>相对位置</th></tr></thead>
+          <tbody>
+            <tr><td><b>黑龙江</b></td><td class="num">311.75</td><td>4 月单月 352.86 为 Q2 峰值，5-6 月维持 290 万以上</td><td><div class="bar"><i style="width:100%;background:#16a34a"></i></div></td></tr>
+            <tr><td><b>海南</b></td><td class="num">230.78</td><td>策略价差最高省份（437.48）</td><td><div class="bar"><i style="width:74%;background:#16a34a"></i></div></td></tr>
+            <tr><td><b>山东</b></td><td class="num">215.54</td><td>—</td><td><div class="bar"><i style="width:69%;background:#16a34a"></i></div></td></tr>
+            <tr><td><b>四川</b></td><td class="num">30.19</td><td>全国尾部，现货曲线平稳</td><td><div class="bar"><i style="width:10%;background:#b45309"></i></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">源：飔合科技 Q2 报告。全国区间 30~312 万。</p>
+    </div>
+
+    <div class="card">
+      <h3>2h→4h 收益倍率 <span class="tagx">Q2 月均·倍率提升最高省份</span></h3>
+      <p>全国多数省份倍率集中 <b>1.50~1.87</b> 区间。4h 系统在中西部高波动省份增益最显著。</p>
+      <div class="tw" style="margin-top:10px">
+        <table class="t">
+          <thead><tr><th>省份</th><th>2h→4h 倍率</th><th>相对水平</th></tr></thead>
+          <tbody>
+            <tr><td><b>宁夏</b></td><td class="num">1.87</td><td><div class="bar"><i style="width:100%;background:#d97706"></i></div></td></tr>
+            <tr><td><b>安徽 / 山东 / 蒙西 / 河北南网 / 青海</b></td><td class="num">&gt;1.80</td><td><div class="bar"><i style="width:96%;background:#d97706"></i></div></td></tr>
+            <tr><td>全国多数省份</td><td class="num">1.50~1.80</td><td><div class="bar"><i style="width:80%;background:#94a3b8"></i></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>输配电价背景</h3>
+      <p>第四监管周期（发改价格〔2026〕1077号）自 <b>2026-08-01</b> 执行，单一制口径「电量电价及容需量电价微涨」，各省分化。</p>
+      <div class="note">充电成本结构将随 8 月账单落地而变动——储能项目的实际到手收益需按当地充电侧电价重新测算。</div>
+    </div>
+  </section>
+
+  <!-- ========== 10. 数据台账 ========== -->
+  <section class="view" id="v-ledger">
+    <div class="vhead">
+      <div class="crumb">附录 / DATA LEDGER</div>
+      <h1>数据台账 · 来源·时点·箱级</h1>
+      <p class="lede">本台所有关键数字的溯源登记。白箱=官方一手或 ≥2 独立权威信源；灰箱=单一二手/行业通行推断；黑箱=待核实。</p>
+    </div>
+
+    <div class="card">
+      <div class="legend">
+        <span class="it"><span class="sw" style="background:#16a34a"></span>白箱 = 官方一手或 ≥2 独立权威信源</span>
+        <span class="it"><span class="sw" style="background:#b45309"></span>灰箱 = 单一二手 / 行业通行推断</span>
+        <span class="it"><span class="sw" style="background:#6b7280"></span>黑箱 = 待核实</span>
+      </div>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>模块</th><th>关键锚点</th><th>来源</th><th>视角</th><th>箱级</th></tr></thead>
+          <tbody>
+            <tr><td>现货价差</td><td>262.5 元/MWh（7月）</td><td>行业测算（雪球转载 2026-08-25）</td><td>上帝</td><td><span class="pill p-amber">灰箱</span></td></tr>
+            <tr><td>现货价差</td><td>Q2 策略价差（海南 437.48 / 黑龙江 421.48）</td><td>飔合科技 / 北极星 2026-08-10</td><td>上帝</td><td><span class="pill p-green">白箱</span></td></tr>
+            <tr><td>容量机制</td><td>13 省出台 / 安徽 165·河南 330</td><td>中国储能网·北极星 2026-07-10</td><td>上帝</td><td><span class="pill p-green">白箱</span></td></tr>
+            <tr><td>容量机制</td><td>青海 38 / 陕西 55（2h 实得）</td><td>机构测算</td><td>上帝</td><td><span class="pill p-amber">灰箱</span></td></tr>
+            <tr><td>辅助服务</td><td>甘肃 170 / 宁夏 70 / 山西 1000 万</td><td>广发证券 2025 实测</td><td>执行</td><td><span class="pill p-green">白箱</span></td></tr>
+            <tr><td>新能源</td><td>31 省机制电价 / 利用率回落</td><td>国家能源局 / 监测预警中心</td><td>—</td><td><span class="pill p-green">白箱</span></td></tr>
+            <tr><td>新能源</td><td>黑龙江 +25% / 新疆 +73%（退潮）</td><td>2026-07 批次</td><td>上帝</td><td><span class="pill p-amber">灰箱</span></td></tr>
+            <tr><td>运行实效</td><td>Q2 收益 30~312 万 / 倍率</td><td>飔合科技 Q2 报告</td><td>执行</td><td><span class="pill p-green">白箱</span></td></tr>
+            <tr><td>输配电价</td><td>第四监管周期 1077 号</td><td>发改价格〔2026〕1077号</td><td>—</td><td><span class="pill p-green">白箱</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">v2.7 起增列「视角×分母口径」两列：上帝=理论上限/规则边界、执行=含摩擦的真实结算、经评=年化均值坐标；非价差类标"—"，分母无公开口径的标[口径待核实]。本台沿用此登记法。</p>
+    </div>
+
+    <div class="card">
+      <h3>版本路标</h3>
+      <div class="tw">
+        <table class="t">
+          <thead><tr><th>版本</th><th>变更</th></tr></thead>
+          <tbody>
+            <tr><td><b>v2.0</b></td><td>多界面重构：拆为 10 个独立界面（驾驶舱/政策/市场/省间/四机制/省级/实效/台账），左侧五层分组导航，逐层下钻。</td></tr>
+            <tr><td>v1.0</td><td>架构优化版：9 段清单重构为五层架构，顶部加可点击架构图与模块折叠。</td></tr>
+            <tr><td>原 v2.8</td><td>解剖台（参考站）：清单式 9 章。本台在其基础上优化逻辑与内容组织。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="warn"><b>免责：</b>本台为规则梳理与公开数据聚合，非投资/交易建议。价差类数字均标注所属视角与分母口径，跨视角不可直接比较。数据时点 2026-09，引用前请复核最新批次。</div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<div class="toplink" id="toplink">↑</div>
+
+<script>
+  // ---- view router ----
+  var views=[].slice.call(document.querySelectorAll('.view'));
+  var navs=[].slice.call(document.querySelectorAll('.side a.item'));
+  function show(id){
+    if(!document.getElementById('v-'+id)) id='overview';
+    views.forEach(function(v){v.classList.toggle('on',v.id==='v-'+id)});
+    navs.forEach(function(a){a.classList.toggle('active',a.getAttribute('data-v')===id)});
+    window.scrollTo({top:0,behavior:'instant' in window?'instant':'auto'});
+    history.replaceState(null,'','#'+id);
+    document.getElementById('side').classList.remove('open');
+  }
+  navs.forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();show(a.getAttribute('data-v'))})});
+  document.querySelectorAll('[data-go]').forEach(function(el){
+    el.addEventListener('click',function(){show(el.getAttribute('data-go'))});
+  });
+  var initial=(location.hash||'').replace('#','');
+  show(initial||'overview');
+
+  // back to top
+  var tl=document.getElementById('toplink');
+  window.addEventListener('scroll',function(){tl.style.display=window.scrollY>600?'flex':'none'});
+  tl.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+
+  // mobile menu
+  document.getElementById('menuBtn').addEventListener('click',function(){
+    document.getElementById('side').classList.toggle('open');
+  });
+</script>
+</body>
+</html>
